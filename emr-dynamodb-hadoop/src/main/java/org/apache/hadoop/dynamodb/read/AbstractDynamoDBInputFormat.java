@@ -43,7 +43,7 @@ public abstract class AbstractDynamoDBInputFormat<K, V> implements InputFormat<K
   @Override
   public InputSplit[] getSplits(JobConf conf, int desiredSplits) throws IOException {
     JobClient jobClient = new JobClient(conf);
-    int maxClusterMapTasks = DynamoDBUtil.calcMaxMapTasks(jobClient);
+    int maxClusterMapTasks = desiredSplits;
     if (maxClusterMapTasks < 1) {
       throw new RuntimeException("Number of map tasks configured for the cluster less than 1. Map"
           + " tasks: " + maxClusterMapTasks);
