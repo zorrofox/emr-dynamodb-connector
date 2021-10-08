@@ -173,6 +173,7 @@ public class DynamoDBFilterPushdown {
       List<GlobalSecondaryIndexDescription> globalSecondaryIndexes,
       ArrayList<String> projections,
       Map<String, DynamoDBFilter> filterMap) {
+          
 
     DynamoDBQueryFilter filter = new DynamoDBQueryFilter();
 
@@ -225,6 +226,8 @@ public class DynamoDBFilterPushdown {
         filter.addScanFilter(f);
       }
     }
+    log.info("key filter size: " + filter.getKeyConditions().size());
+    log.info("scan filter size: " + filter.getScanFilter().size());
     return filter;
   }
 

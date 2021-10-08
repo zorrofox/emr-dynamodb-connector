@@ -73,6 +73,7 @@ public class DynamoDBQueryInputFormat extends
       log.info("Defaulting to 1 mapper because there are key conditions");
       return 1;
     } else {
+      log.info("Not a Query request but for a Scan.");
       return super.getNumMappers(maxClusterMapTasks, configuredReadThroughput, conf);
     }
   }
@@ -98,7 +99,7 @@ public class DynamoDBQueryInputFormat extends
                .get(DynamoDBConstants.DYNAMODB_FILTER_PROJECTION).split(",")));
       
       TableDescription tableDescription =
-          client.describeTable(conf.get(DynamoDBConstants.TABLE_NAME));
+          client.describeTable(conf.get(DynamoDBConstants.INPUT_TABLE_NAME));
       DynamoDBQueryFilter queryFilter = pushdown.predicateToDynamoDBFilter(
           tableDescription.getKeySchema(),
           tableDescription.getLocalSecondaryIndexes(),
