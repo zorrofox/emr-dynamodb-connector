@@ -83,7 +83,7 @@ Using the DynamoDBInputFormat and DynamoDBOutputFormat classes with `spark-shell
 ```
 $ spark-shell --jars /usr/share/aws/emr/ddb/lib/emr-ddb-hadoop.jar
 ...
-import org.apache.hadoop.io.Text;
+import org.apache.hadoop.io.Text
 import org.apache.hadoop.dynamodb.DynamoDBItemWritable
 import org.apache.hadoop.dynamodb.read.DynamoDBInputFormat
 import org.apache.hadoop.dynamodb.write.DynamoDBOutputFormat
@@ -95,6 +95,47 @@ jobConf.set("dynamodb.input.tableName", "myDynamoDBTable")
 
 jobConf.set("mapred.output.format.class", "org.apache.hadoop.dynamodb.write.DynamoDBOutputFormat")
 jobConf.set("mapred.input.format.class", "org.apache.hadoop.dynamodb.read.DynamoDBInputFormat")
+
+var orders = sc.hadoopRDD(jobConf, classOf[DynamoDBInputFormat], classOf[Text], classOf[DynamoDBItemWritable])
+
+orders.count()
+```
+
+## Example: Query/Scan Filter Pushdown with Spark
+
+We will use serialize `DynamoDBNAryFilter`, `DynamoDBUnaryFilter` or `DynamoDBBinaryFilter` classes to push down the filter conditions, and the `DynamoDBQueryInputFormat` will help us to use these condions.
+```
+$ spark-shell --jars /usr/share/aws/emr/ddb/lib/emr-ddb-hadoop.jar
+...
+import org.apache.hadoop.io.Text
+import org.apache.hadoop.dynamodb.DynamoDBItemWritable
+import org.apache.hadoop.dynamodb.read.DynamoDBQueryInputFormat
+import org.apache.hadoop.dynamodb.write.DynamoDBOutputFormat
+import org.apache.hadoop.mapred.JobConf
+import org.apache.hadoop.io.LongWritable
+import org.apache.hadoop.dynamodb.filter.DynamoDBNAryFilter
+import java.util.ArrayList
+import org.apache.hadoop.dynamodb.util.SerializeUtil
+
+var jobConf = new JobConf(sc.hadoopConfiguration)
+jobConf.set("dynamodb.input.tableName", "myDynamoDBTable")
+
+jobConf.set("mapred.output.format.class", "org.apache.hadoop.dynamodb.write.DynamoDBQueryInputFormat")
+jobConf.set("mapred.input.format.class", "org.apache.hadoop.dynamodb.read.DynamoDBInputFormat")
+
+val filterList = new ArrayList[AbstractDynamoDBFilter]()
+filterList.add(new DynamoDBNAryFilter(
+      "PK",
+      DynamoDBFilterOperator.BETWEEN,
+      "S",
+      "11111111",
+      "22222222"
+  ))
+
+val filterString = SerializeUtil.toString(filterList)
+
+jobConf.set("dynamodb.filter.multiple.query", filterString)
+jobConf.set("dynamodb.filter.filter.projection", "PK,SK,....")
 
 var orders = sc.hadoopRDD(jobConf, classOf[DynamoDBInputFormat], classOf[Text], classOf[DynamoDBItemWritable])
 
